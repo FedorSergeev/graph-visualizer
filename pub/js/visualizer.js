@@ -2,49 +2,32 @@
 var canvasDimensions = { "width": 1300, "height": 1300 };
 // endregion
 
-
 /**
  * Визуализация стейтов воркфлоу
  */
 function visualize() {
 
     prepare2DCanvas();
-    
+
     const xmlDoc = getXmlDocument();
 
-    // Для каждой ноды типа state рисуем свой квадрат
-    const numberOfStates = xmlDoc.childNodes[0].childElementCount;
-    var graphModel = createGraphModel();
+    let innerModel = convertFlow(xmlDoc)
 
-    for (let stateIndex = 0; stateIndex < numberOfStates; stateIndex++) {
-        let stateModel = createStateModel();
-        stateModel.properties = {};
-        stateModel.connectors = Array();
-        stateModel.type = "decision";
-        stateModel.description = xmlDoc.childNodes[0].children[stateIndex].getAttribute("title");
+    renderFlowOnCirle(innerModel);
 
-        let xmlTransitions = Array.from(xmlDoc.childNodes[0].children[stateIndex].children).filter(child => "state-transition" === child.tagName);
-        for (let transitionIndex = 0; transitionIndex < xmlTransitions.length; transitionIndex++) {
-            stateModel.connectors.push({
-                "name": xmlTransitions[transitionIndex].getAttribute("name"),
-                "to": xmlTransitions[transitionIndex].getAttribute("to")
-            });
-        }
-        graphModel.states[xmlDoc.childNodes[0].children[stateIndex].getAttribute("name")] = stateModel;
-    }
-
-    // todo здесь выбираем метод рендера
-    renderFlowOnCirle(graphModel);
+    document.body.appendChild(drawSvgTreeChart(innerModel, document))
 }
 
 /**
  * Подготовка канваса, зависит от метода отрисовки, поэтому стоит вынести в отдельную мапу с лямблами для выбора способа рендера
  */
 function prepare2DCanvas() {
+    if(document.getElementById("flowCanvas")) return;
     const canvasDocElement = document.createElement("canvas");
     canvasDocElement.id = "flowCanvas";
     canvasDocElement.width = canvasDimensions.width;
     canvasDocElement.height = canvasDimensions.height;
+    canvasDocElement.style.width = '100%'
     document.getElementById("content").append(canvasDocElement);
 }
 
@@ -63,6 +46,8 @@ function renderFlowOnCirle(graphModel) {
     const flowDimensions = { "width": 190, "height": 50 };
     const stateCount = Object.keys(graphModel.states).length;
     const ctx = document.getElementById("flowCanvas").getContext("2d");
+
+    ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
 
     // Можно расскомментировать для понимания, откуда берется расстановка стейтов
     // drawCircle(ctx);
@@ -142,12 +127,12 @@ function renderArrow(arrow, context) {
     const arrowHeadLength = 20;
     context.beginPath();
     context.moveTo(arrow.destX, arrow.destY);
-    context.lineTo(arrow.destX - arrowHeadLength * Math.cos(angle-Math.PI/7), arrow.destY - arrowHeadLength * Math.sin(angle-Math.PI/9));
+    context.lineTo(arrow.destX - arrowHeadLength * Math.cos(angle - Math.PI / 7), arrow.destY - arrowHeadLength * Math.sin(angle - Math.PI / 9));
     context.stroke();
 
     context.beginPath();
     context.moveTo(arrow.destX, arrow.destY);
-    context.lineTo(arrow.destX - arrowHeadLength * Math.cos(angle + Math.PI/7), arrow.destY - arrowHeadLength * Math.sin(angle + Math.PI/9));
+    context.lineTo(arrow.destX - arrowHeadLength * Math.cos(angle + Math.PI / 7), arrow.destY - arrowHeadLength * Math.sin(angle + Math.PI / 9));
     context.stroke();
 }
 
