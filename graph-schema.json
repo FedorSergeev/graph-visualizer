@@ -1,0 +1,67 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Схема для валидации данных о графе",
+    "type": "object",
+    "properties": {
+      "enterState": {
+        "type": "string"
+      },
+      "terminator": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "properties": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "states": {
+        "type": "object",
+        "additionalProperties": {
+            "$ref": "#/definitions/state"
+        },
+        "required": [
+          "onEnter"
+        ]
+      }
+    },
+    "required": [
+      "enterState",
+      "terminator",
+      "description",
+      "properties",
+      "states"
+    ],
+    "definitions": {
+        "state": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "properties": {
+                "type": "object",
+                "properties": {},
+                "required": []
+              },
+              "connectors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "type",
+              "description",
+              "properties",
+              "connectors"
+            ]
+          }
+      }
+  }
