@@ -1,7 +1,6 @@
 // region парочка глобальных переменных а ля конфиг
 var canvasDimensions = {"width": 1300, "height": 1300};
-var centralCircle = {"x": canvasDimensions.width / 2, "y": canvasDimensions.height / 2, "offset": 80};
-var flowDimensions = {"width": 190, "height": 50};
+
 
 // endregion
 
@@ -10,58 +9,88 @@ var flowDimensions = {"width": 190, "height": 50};
  * Визуализация стейтов воркфлоу
  */
 function visualize() {
-    const parser = new DOMParser();
 
-    const xmlString = document.getElementById("flowInput").value;
-    const xmlDoc = parser.parseFromString(xmlString,"text/xml");
-
+    // region подготовка канваса, зависит от метода отрисовки, поэтому стоит вынести в отдельную мапу с лямблами для выбора способа рендера
     const canvasDocElement = document.createElement("canvas");
     canvasDocElement.id = "flowCanvas";
     canvasDocElement.width = canvasDimensions.width;
     canvasDocElement.height = canvasDimensions.height;
     document.getElementById("content").append(canvasDocElement);
 
-    const c = document.getElementById("flowCanvas");
-    const ctx = c.getContext("2d");
+    const parser = new DOMParser();
+    const xmlString = document.getElementById("flowInput").value;
+    const xmlDoc = parser.parseFromString(xmlString,"text/xml");
 
     // Можно расскомментировать для понимания, откуда берется расстановка стейтов
     // drawCircle(ctx);
 
     // Для каждой ноды типа state рисуем свой квадрат
     const numberOfStates = xmlDoc.childNodes[0].childElementCount;
-    var states = Array();
+    var graphModel = createGraphModel();
+    
     for (let stateIndex = 0; stateIndex < numberOfStates; stateIndex++) {
-        states.push(createState(xmlDoc.childNodes[0].children[stateIndex]));
+        let stateModel = createStateModel();
+        stateModel.properties = {};
+        stateModel.connectors = Array();
+        stateModel.type = "decision";
+        stateModel.description = xmlDoc.childNodes[0].children[stateIndex].getAttribute("title");
+
+        let xmlTransitions = Array.from(xmlDoc.childNodes[0].children[stateIndex].children).filter(child => "state-transition" === child.tagName);
+        for (let transitionIndex = 0; transitionIndex < xmlTransitions.length; transitionIndex++) {
+            stateModel.connectors.push({"name": xmlTransitions[transitionIndex].getAttribute("name") , 
+                                        "to": xmlTransitions[transitionIndex].getAttribute("to")});
+        }
+        graphModel.states[xmlDoc.childNodes[0].children[stateIndex].getAttribute("name")] = stateModel;
     }
 
-    for (let index = 0; index < states.length; index++) {
-    //     state.view.outgoingArrows.push({
-    //         "x": getStateRectangleXCoordinate(index, states.length) - flowDimensions.width / 2,
-    //         "y": getStateRectangleYCoordinate(index, states.length)
-    // });
-    //     state.view.incomingArrows.push()
-        drawFlowState(ctx, states[index], index, states.length);
-    }
-    
-    
+    // todo здесь выбираем метод рендера
+    renderFlowOnCirle(graphModel);
 }
 
 /**
- * Создает представление стейта для последующей визуализации на основе данных из воркфлоу ЕФС
- * @param {представление стейта в рамках ЕФС воркфлоу} xmlNode 
+ * Отрисовка графа, где вершины расположены на окружности
+ * @param {данные отображаемого графа} graphModel 
  */
-function createState(xmlNode) {
-    var state = {
-         "name" : xmlNode.getAttribute("name"),
-         "title": xmlNode.getAttribute("title"),
-         "onEnter": xmlNode.getAttribute("on-enter"),
-         "outGoingTransitionCount": Array.from(xmlNode.children).filter(element => "state-transition" === element.tagName).length,
-         "view": {
+function renderFlowOnCirle(graphModel) {
+    const centralCircle = {"x": canvasDimensions.width / 2, "y": canvasDimensions.height / 2, "offset": 80};
+    const flowDimensions = {"width": 190, "height": 50};
+    const stateCount = Object.keys(graphModel.states).length;
+    const ctx = document.getElementById("flowCanvas").getContext("2d");
+
+    let currentStateIndex = 0;
+    for (let index in graphModel.states) {
+        let stateView = {
+            "name": index,
             "incomingArrows":[],
             "outgoingArrows":[]
-         }
+        };
+        let outgoingYCoordinate = getStateRectangleYCoordinate(currentStateIndex, stateCount, centralCircle, flowDimensions) + centralCircle.offset;
+        if (outgoingYCoordinate > centralCircle.y) {
+            outgoingYCoordinate -= flowDimensions.height;
+        }
+
+        let incomingYCoordinate = getStateRectangleYCoordinate(currentStateIndex, stateCount, centralCircle, flowDimensions) + centralCircle.offset - (flowDimensions.height / 2);
+        
+        let incomingXCoordinate = getStateRectangleXCoordinate(currentStateIndex, stateCount, centralCircle, flowDimensions) + (flowDimensions.width / 2);
+        if(incomingXCoordinate < centralCircle.x) {
+            incomingXCoordinate += flowDimensions.width / 2;
+        } else {
+            incomingXCoordinate -= flowDimensions.width / 2;
+        }
+
+        stateView.outgoingArrows.push({
+            "x": getStateRectangleXCoordinate(currentStateIndex, stateCount, centralCircle, flowDimensions) + (flowDimensions.width / 2),
+            "y": outgoingYCoordinate
+        });
+
+        stateView.incomingArrows.push({
+            "x": incomingXCoordinate,
+            "y": incomingYCoordinate
+        });
+
+        drawFlowState(ctx, stateView, currentStateIndex, stateCount, centralCircle, flowDimensions);
+        currentStateIndex++;
     }
-    return state;
 }
 
 /**
@@ -79,26 +108,52 @@ function drawCircle(context) {
 }
 
 /**
- * Рисуем квадрат со стейтом и со всей хурмой
+ * Рисуем маленькую жирненькую точечку, откуда могут выходить или приходить стрелки
+ * @param {2D контекст} context
+ * @param {Х координата точки} x
+ * @param {Y координата точки} y
  */
-function drawFlowState(context, state, stateIndex, numberOfStates) {
+function drawFlowPoint(context, x, y) {
+    context.beginPath();
+    context.arc(x, y, 4, 0, 2 * Math.PI, false);
+    context.fillStyle = '#ffffff';
+    context.fill();
+    context.strokeStyle = '#003300';
+    context.stroke();
+}
+
+/**
+ * Рисуем квадрат со стейтом и со всей хурмой
+ * @param {2D контекст} context 
+ * @param {визуальное представление текущей вершины} stateView 
+ * @param {номер вершины} stateIndex 
+ * @param {общее число вершин графа} numberOfStates 
+ * @param {конфигурация окружности, на которой рисуются вершины графа} centralCircle
+ * @param {конфигурация для отрисовки вершины графа} flowDimensions 
+ */
+function drawFlowState(context, stateView, stateIndex, numberOfStates, centralCircle, flowDimensions) {
     context.beginPath();
     context.lineWidth = 2;
     context.strokeStyle = '#003300';
-    context.rect(getFlowStateOffsetX(stateIndex, numberOfStates), getFlowStateOffsetY(stateIndex, numberOfStates), flowDimensions.width, flowDimensions.height);
+    context.rect(getFlowStateOffsetX(stateIndex, numberOfStates, centralCircle, flowDimensions), getFlowStateOffsetY(stateIndex, numberOfStates), flowDimensions.width, flowDimensions.height);
     context.stroke();
+
+    drawFlowPoint(context, stateView.outgoingArrows[0].x, stateView.outgoingArrows[0].y);
+    drawFlowPoint(context, stateView.incomingArrows[0].x, stateView.incomingArrows[0].y);
 
     context.font = "14px Arial";
     context.strokeStyle = '#ffffff';
-    context.fillText(state.name, getStateRectangleXCoordinate(stateIndex, numberOfStates), getStateRectangleYCoordinate(stateIndex, numberOfStates));
+    context.fillText(stateView.name, getStateRectangleXCoordinate(stateIndex, numberOfStates, centralCircle, flowDimensions), getStateRectangleYCoordinate(stateIndex, numberOfStates, centralCircle, flowDimensions));
 }
 
 /**
  * Рассчитывает смещение по абсциссе для верхней левой точки прямоугольника, который визуализирует стейт
  * @param {порядковый номер стейта} stateIndex 
  * @param {количество стейтов} numberOfStates 
+ * @param {конфигурация окружности, на которой расположены вершины графа} centralCircle 
+ * @param {конфигурация для отрисовки вершины графа} flowDimensions 
  */
-function getFlowStateOffsetX(stateIndex, numberOfStates) {
+function getFlowStateOffsetX(stateIndex, numberOfStates, centralCircle, flowDimensions) {
     let angle = ((2 * Math.PI) / numberOfStates) * (stateIndex + 1);
     let radius = canvasDimensions.height / 2 - centralCircle.offset;
     return centralCircle.x + radius * Math.cos(angle) - flowDimensions.width / 2;
@@ -108,17 +163,46 @@ function getFlowStateOffsetX(stateIndex, numberOfStates) {
  * Рассчитывает смещение по абсциссе для верхней левой точки прямоугольника, который визуализирует стейт
  * @param {порядковый номер стейта} stateIndex 
  * @param {количество стейтов} numberOfStates 
+ * @param {конфигурация для отрисофки вершины графа} flowDimensions 
  */
-function getFlowStateOffsetY(stateIndex, numberOfStates) {
+function getFlowStateOffsetY(stateIndex, numberOfStates, centralCircle, flowDimensions) {
     let angle = ((2 * Math.PI) / numberOfStates) * (stateIndex + 1);
     let radius = canvasDimensions.height / 2 - centralCircle.offset;
     return centralCircle.x + radius * Math.sin(angle) - flowDimensions.height / 2;
 }
 
-function getStateRectangleXCoordinate(stateIndex, numberOfStates) {
-    return getFlowStateOffsetX(stateIndex, numberOfStates) + 5;
+function getStateRectangleXCoordinate(stateIndex, numberOfStates, centralCircle, flowDimensions) {
+    return getFlowStateOffsetX(stateIndex, numberOfStates, centralCircle, flowDimensions) + 5;
 }
 
-function getStateRectangleYCoordinate(stateIndex, numberOfStates) {
-    return getFlowStateOffsetY(stateIndex, numberOfStates) + 15;
+function getStateRectangleYCoordinate(stateIndex, numberOfStates, centralCircle, flowDimensions) {
+    return getFlowStateOffsetY(stateIndex, numberOfStates, centralCircle, flowDimensions) - 25;
+}
+
+/**
+ * Создает модель графа
+ * @returns модель графа, используемая потребителями: как разного рода рендерами, так и приложениями в качестве описание бизнес-процесса
+ */
+function createGraphModel() {
+    return {
+            "apiVerion": "1",
+            "enterState": "",
+            "terminator": "",
+            "description": "",
+            "properties": {},
+            "states": {}
+          };
+    };
+
+/**
+ * Создает пустую вершину графа (состояние конечного автомата)
+ * @returns модель вершины графа
+ */
+function createStateModel() {
+    return {
+        "type": "decision | process | external",
+        "description": "state",
+        "properties": {},
+        "connectors": []
+      };
 }
