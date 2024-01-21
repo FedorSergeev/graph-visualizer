@@ -1,7 +1,5 @@
 // region парочка глобальных переменных а ля конфиг
 var canvasDimensions = { "width": 1300, "height": 1300 };
-
-
 // endregion
 
 
@@ -10,19 +8,9 @@ var canvasDimensions = { "width": 1300, "height": 1300 };
  */
 function visualize() {
 
-    // region подготовка канваса, зависит от метода отрисовки, поэтому стоит вынести в отдельную мапу с лямблами для выбора способа рендера
-    const canvasDocElement = document.createElement("canvas");
-    canvasDocElement.id = "flowCanvas";
-    canvasDocElement.width = canvasDimensions.width;
-    canvasDocElement.height = canvasDimensions.height;
-    document.getElementById("content").append(canvasDocElement);
-
-    const parser = new DOMParser();
-    const xmlString = document.getElementById("flowInput").value;
-    const xmlDoc = parser.parseFromString(xmlString, "text/xml");
-
-    // Можно расскомментировать для понимания, откуда берется расстановка стейтов
-    // drawCircle(ctx);
+    prepare2DCanvas();
+    
+    const xmlDoc = getXmlDocument();
 
     // Для каждой ноды типа state рисуем свой квадрат
     const numberOfStates = xmlDoc.childNodes[0].childElementCount;
@@ -50,6 +38,23 @@ function visualize() {
 }
 
 /**
+ * Подготовка канваса, зависит от метода отрисовки, поэтому стоит вынести в отдельную мапу с лямблами для выбора способа рендера
+ */
+function prepare2DCanvas() {
+    const canvasDocElement = document.createElement("canvas");
+    canvasDocElement.id = "flowCanvas";
+    canvasDocElement.width = canvasDimensions.width;
+    canvasDocElement.height = canvasDimensions.height;
+    document.getElementById("content").append(canvasDocElement);
+}
+
+function getXmlDocument() {
+    const parser = new DOMParser();
+    const xmlString = document.getElementById("flowInput").value;
+    return parser.parseFromString(xmlString, "text/xml");
+}
+
+/**
  * Отрисовка графа, где вершины расположены на окружности
  * @param {данные отображаемого графа} graphModel 
  */
@@ -58,6 +63,9 @@ function renderFlowOnCirle(graphModel) {
     const flowDimensions = { "width": 190, "height": 50 };
     const stateCount = Object.keys(graphModel.states).length;
     const ctx = document.getElementById("flowCanvas").getContext("2d");
+
+    // Можно расскомментировать для понимания, откуда берется расстановка стейтов
+    // drawCircle(ctx);
 
     let graphView = { "stateViews": {} };
     let currentStateIndex = 0;
@@ -119,12 +127,27 @@ function renderFlowOnCirle(graphModel) {
 }
 
 
+/**
+ * Рисут стрелку в конце ребра графа для понимания, в какую сторону он направлен
+ * @param {ребро направленного графа} arrow 
+ * @param {2D контекст} context 
+ */
 function renderArrow(arrow, context) {
     context.beginPath();
     context.moveTo(arrow.srcX, arrow.srcY);
     context.lineTo(arrow.destX, arrow.destY);
+    context.stroke();
 
-    // Draw the Path
+    const angle = Math.atan2(arrow.destY - arrow.srcY, arrow.destX - arrow.srcX);
+    const arrowHeadLength = 20;
+    context.beginPath();
+    context.moveTo(arrow.destX, arrow.destY);
+    context.lineTo(arrow.destX - arrowHeadLength * Math.cos(angle-Math.PI/7), arrow.destY - arrowHeadLength * Math.sin(angle-Math.PI/9));
+    context.stroke();
+
+    context.beginPath();
+    context.moveTo(arrow.destX, arrow.destY);
+    context.lineTo(arrow.destX - arrowHeadLength * Math.cos(angle + Math.PI/7), arrow.destY - arrowHeadLength * Math.sin(angle + Math.PI/9));
     context.stroke();
 }
 
@@ -229,11 +252,27 @@ function getFlowStateOffsetY(stateIndex, numberOfStates, centralCircle, flowDime
     return centralCircle.x + radius * Math.sin(angle) - flowDimensions.height / 2;
 }
 
+/**
+ * 
+ * @param {порядковый номер вершины} stateIndex 
+ * @param {количество вершин графа} numberOfStates 
+ * @param {конфигурация окружности, на которой рисуются вершины} centralCircle 
+ * @param {конфигурация для отображения вершины графа} flowDimensions 
+ * @returns отступ по оси Х для указанной вершины графа
+ */
 function getStateRectangleXCoordinate(stateIndex, numberOfStates, centralCircle, flowDimensions) {
     console.log("getStateRectangleXCoordinate: DEBUG centralCirle = " + centralCircle + ", flowDimensions = " + flowDimensions);
     return getFlowStateOffsetX(stateIndex, numberOfStates, centralCircle, flowDimensions) + 5;
 }
 
+/**
+ * 
+ * @param {порядковый номер вершины} stateIndex 
+ * @param {количество вершин графа} numberOfStates 
+ * @param {конфигурация окружности, на которой рисуются вершины} centralCircle 
+ * @param {конфигурация для отображения вершины графа} flowDimensions 
+ * @returns отступ по оси Н для указанной вершины графа
+ */
 function getStateRectangleYCoordinate(stateIndex, numberOfStates, centralCircle, flowDimensions) {
     console.log("getStateRectangleYCoordinate: DEBUG centralCirle = " + centralCircle + ", flowDimensions = " + flowDimensions);
     return getFlowStateOffsetY(stateIndex, numberOfStates, centralCircle, flowDimensions) - 25;
