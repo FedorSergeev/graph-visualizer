@@ -1,5 +1,18 @@
 // region парочка глобальных переменных а ля конфиг
-var canvasDimensions = { "width": 1300, "height": 1300 };
+var canvasDimensions = { width: 1300, height: 1300 };
+var flowOnCirle = (model) => renderFlowOnCirle(model);
+var sequenceFlow = (model) => renderFlowAsSequence(model);
+/**
+ * Набор возможных алгоритмов визуализации графа
+ */
+var renderService = {
+    cirleView: flowOnCirle,
+    sequenceView: sequenceFlow
+};
+/**
+ * Выбранный метод отрисовки графа
+ */
+var renderType = "sequenceView";
 // endregion
 
 /**
@@ -11,26 +24,57 @@ function visualize() {
 
     const xmlDoc = getXmlDocument();
 
-    let innerModel = convertFlow(xmlDoc)
+    // Для каждой ноды типа state рисуем свой квадрат
+    const numberOfStates = xmlDoc.childNodes[0].childElementCount;
+    var graphModel = createGraphModel();
+    graphModel.enterState = xmlDoc.children[0].getAttribute("start-state");
 
-    renderFlowOnCirle(innerModel);
+    // from krieven
+//    let innerModel = convertFlow(xmlDoc)
 
-    let draw = new SvgTreeChart(innerModel, document).draw()
+    for (let stateIndex = 0; stateIndex < numberOfStates; stateIndex++) {
+        let stateModel = createStateModel();
+        stateModel.properties = {};
+        stateModel.connectors = Array();
+        stateModel.type = "decision";
+        stateModel.description = xmlDoc.childNodes[0].children[stateIndex].getAttribute("title");
 
-    document.body.insertBefore(draw, document.getElementById("content"))
+        let xmlTransitions = Array.from(xmlDoc.childNodes[0].children[stateIndex].children).filter(child => "state-transition" === child.tagName);
+        for (let transitionIndex = 0; transitionIndex < xmlTransitions.length; transitionIndex++) {
+            stateModel.connectors.push({
+                "name": xmlTransitions[transitionIndex].getAttribute("name"),
+                "to": xmlTransitions[transitionIndex].getAttribute("to")
+            });
+        }
+        graphModel.states[xmlDoc.childNodes[0].children[stateIndex].getAttribute("name")] = stateModel;
+    }
+
+    // todo здесь выбираем метод рендера
+    renderService[renderType](graphModel);
+
+//  from krieven
+//    renderFlowOnCirle(innerModel);
+//
+//    let draw = new SvgTreeChart(innerModel, document).draw()
+
+//    document.body.insertBefore(draw, document.getElementById("content"))
 }
 
 /**
  * Подготовка канваса, зависит от метода отрисовки, поэтому стоит вынести в отдельную мапу с лямблами для выбора способа рендера
  */
 function prepare2DCanvas() {
-    if(document.getElementById("flowCanvas")) return;
+    if (document.getElementById("flowCanvas")) {
+            document.getElementById("flowCanvas").remove();
+    }
     const canvasDocElement = document.createElement("canvas");
     canvasDocElement.id = "flowCanvas";
     canvasDocElement.width = canvasDimensions.width;
     canvasDocElement.height = canvasDimensions.height;
     canvasDocElement.style.width = '100%'
-    document.getElementById("content").append(canvasDocElement);
+
+
+    document.getElementById("graph").append(canvasDocElement);
 }
 
 function getXmlDocument() {
@@ -40,28 +84,218 @@ function getXmlDocument() {
 }
 
 /**
+ * Отрисовка графа в виде последовательности вершин слева направо, начиная от вершины, обозначающей вход в бизнес-процесс, далее все
+ * вершины, имеющие прямую или обратную связь с текущей, и так далее
+ * @param {модель графа для визуализации} model
+ */
+function renderFlowAsSequence(model) {
+    // распределяем флоу на группы стейтов, которые расположены вертиклаьно
+    let view = {
+        bounds: {x: 0, y: 0},
+        stateBounds: {width: 190, height: 150},
+        stateColumns : Array()
+    };
+
+    let usedStateNames = [model.enterState];
+    let hasNextColumn = true;
+    let maxColumnSize = 0;
+    view.stateColumns.push([{
+        model: model.states[model.enterState],
+        name: model.enterState
+    }]);
+
+    while(hasNextColumn) {
+        let nextColumn = Array();
+        hasNextColumn = false;
+        for (let stateIndex = 0; stateIndex < view.stateColumns[view.stateColumns.length - 1].length; stateIndex++) {
+            let currentState = view.stateColumns[view.stateColumns.length - 1][stateIndex].model;
+            for (let connectorIndex = 0; connectorIndex < currentState.connectors.length; connectorIndex++) {
+                if (currentState.connectors[connectorIndex].to !== "end" & !usedStateNames.includes(currentState.connectors[connectorIndex].to)) {
+                    usedStateNames.push(currentState.connectors[connectorIndex].to);
+                    hasNextColumn = true;
+                    let stateView = {
+                        model: model.states[currentState.connectors[connectorIndex].to],
+                        name: currentState.connectors[connectorIndex].to
+                    }
+                    nextColumn.push(stateView);
+                }
+            }
+        }
+        if (nextColumn.length > 0) {
+            view.stateColumns.push(nextColumn);
+            if (nextColumn.length > maxColumnSize) {
+                maxColumnSize = nextColumn.length;
+            }
+        }
+    }
+
+    Object.keys(model.states).forEach(stateKey => {
+        if (!usedStateNames.includes(stateKey)) {
+            view.stateColumns.push([{model: model.states[stateKey], name: stateKey}]);
+        }
+    });
+
+    view.bounds.x = view.stateBounds.width * ((view.stateColumns.length * 2) + 1);
+    view.bounds.y = view.stateBounds.height * ((maxColumnSize * 2) + 1);
+
+    canvasDimensions.width = view.bounds.x;
+    canvasDimensions.height = view.bounds.y;
+
+    prepare2DCanvas();
+
+    const context = document.getElementById("flowCanvas").getContext("2d");
+
+    let stateCoordinatesByName = {};
+
+    context.fillStyle = "#eeeeee";
+    context.fillRect(0, 0,view.bounds.x, view.bounds.y);
+    context.stroke();
+
+    for (let i = 0; i < view.stateColumns.length; i++) {
+        for (let y = 0; y < view.stateColumns[i].length; y++) {
+            renderSequenceState(view, i, y, context);
+            stateCoordinatesByName[view.stateColumns[i][y].name] =  {
+                x: view.stateColumns[i][y].rectCoordinateX,
+                y: view.stateColumns[i][y].rectCoordinateY,
+                cellPositionX: i,
+                cellPositionY: y,
+                freeIncomingPosition: 1
+            };
+        }
+    }
+    for (let i = 0; i < view.stateColumns.length; i++) {
+        let connectorCentralOffsetX = 0;
+        for (let y = 0; y < view.stateColumns[i].length; y++) {
+
+            let connectorOutgoingOffsetY = 0;
+            for (let connectorIndex = 0; connectorIndex < view.stateColumns[i][y].model.connectors.length; connectorIndex++) {
+
+                if (stateCoordinatesByName[view.stateColumns[i][y].model.connectors[connectorIndex].to]) {
+                    let srcX = view.stateColumns[i][y].rectCoordinateX + view.stateBounds.width;
+                    let srcY = view.stateColumns[i][y].rectCoordinateY + view.stateBounds.height / 2;
+                    let destX = stateCoordinatesByName[view.stateColumns[i][y].model.connectors[connectorIndex].to].x;
+                    let destY = stateCoordinatesByName[view.stateColumns[i][y].model.connectors[connectorIndex].to].y + view.stateBounds.height / 2;
+
+
+                if (destX < srcX) {
+                    srcX -= view.stateBounds.width;
+                    destX += view.stateBounds.width;
+                }
+
+                renderArrowOnSequenceGraph(
+                    {
+                        srcX : srcX,
+                        srcY : srcY + connectorOutgoingOffsetY,
+                        destX : destX,
+                        destY: destY + connectorOutgoingOffsetY - 10 * stateCoordinatesByName[view.stateColumns[i][y].model.connectors[connectorIndex].to].freeIncomingPosition,
+                        srcColNum : i,
+                        srcRowNum : y,
+                        destColNum : stateCoordinatesByName[view.stateColumns[i][y].model.connectors[connectorIndex].to].cellPositionX,
+                        connectorCentralOffsetX : connectorCentralOffsetX,
+                        connectorCentralOffsetY : connectorOutgoingOffsetY
+                    },
+                    view,
+                    context
+                );
+                }
+                connectorOutgoingOffsetY += 5;
+                connectorCentralOffsetX += 5;
+                if (stateCoordinatesByName[view.stateColumns[i][y].model.connectors[connectorIndex].to]) {
+                    stateCoordinatesByName[view.stateColumns[i][y].model.connectors[connectorIndex].to].freeIncomingPosition++;
+                }
+            }
+        }
+    }
+}
+
+function renderSequenceState(view, index, indexY, context) {
+    view.stateColumns[index][indexY]["rectCoordinateX"] = view.stateBounds.width + view.stateBounds.width * index * 2;
+    view.stateColumns[index][indexY]["rectCoordinateY"] = (view.bounds.y - ((view.stateColumns[index].length * 2) - 1) * view.stateBounds.height) / 2 + (view.stateBounds.height * indexY * 2);
+    view.stateColumns[index][indexY]["cellPositionX"] = index;
+    view.stateColumns[index][indexY]["cellPositionY"] = indexY;
+
+    context.beginPath();
+    context.lineWidth = 2;
+    context.strokeStyle = '#000000';
+    context.rect(view.stateColumns[index][indexY].rectCoordinateX,
+                view.stateColumns[index][indexY].rectCoordinateY,
+                view.stateBounds.width,
+                view.stateBounds.height);
+    context.stroke();
+
+    context.font = "14px Arial";
+    context.fillStyle = "#000000";
+    context.fillText(view.stateColumns[index][indexY].name,
+                    view.stateColumns[index][indexY].rectCoordinateX + 10,
+                     view.stateColumns[index][indexY].rectCoordinateY + 15);
+}
+
+/**
+ * Рисут соединение между вершинами графа со стрелкой на грфе, отображенном в виде посоедовательности
+ * @param {ребро направленного графа} arrow
+ * @param {2D контекст} context
+ */
+function renderArrowOnSequenceGraph(arrow, view, context) {
+    if (arrow.srcColNum > arrow.destColNum) {
+        arrow.srcY -= view.stateBounds.height / 3.5;
+        arrow.destY -= view.stateBounds.height / 3.5;
+    } else if (arrow.srcColNum < arrow.destColNum) {
+        arrow.srcY += view.stateBounds.height / 3.5;
+        arrow.destY += view.stateBounds.height / 3.5;
+    }
+
+    let xLineTo = arrow.srcColNum < arrow.destColNum
+        ? arrow.srcX  + arrow.connectorCentralOffsetX + view.stateBounds.width * 0.65
+        : arrow.srcX  + arrow.connectorCentralOffsetX - view.stateBounds.width * 0.65;
+
+    context.beginPath();
+    context.moveTo(arrow.srcX, arrow.srcY);
+
+    context.lineTo(xLineTo, arrow.srcY);
+    context.stroke();
+
+    context.beginPath();
+    context.moveTo(xLineTo, arrow.srcY);
+    context.lineTo(xLineTo, arrow.destY);
+    context.stroke();
+
+    context.beginPath();
+    context.moveTo(xLineTo, arrow.destY);
+    context.lineTo(arrow.destX, arrow.destY);
+    context.stroke();
+
+    const angle = arrow.srcColNum < arrow.destColNum ? 0 : Math.PI;
+    const arrowHeadLength = 20;
+    context.beginPath();
+    context.moveTo(arrow.destX, arrow.destY);
+    context.lineTo(arrow.destX - arrowHeadLength * Math.cos(angle-Math.PI/7), arrow.destY - arrowHeadLength * Math.sin(angle-Math.PI/9));
+    context.stroke();
+
+    context.beginPath();
+    context.moveTo(arrow.destX, arrow.destY);
+    context.lineTo(arrow.destX - arrowHeadLength * Math.cos(angle + Math.PI/7), arrow.destY - arrowHeadLength * Math.sin(angle + Math.PI/9));
+    context.stroke();
+}
+
+/**
  * Отрисовка графа, где вершины расположены на окружности
  * @param {данные отображаемого графа} graphModel 
  */
 function renderFlowOnCirle(graphModel) {
-    const centralCircle = { "x": canvasDimensions.width / 2, "y": canvasDimensions.height / 2, "offset": 80 };
-    const flowDimensions = { "width": 190, "height": 50 };
+    const centralCircle = { x: canvasDimensions.width / 2, y: canvasDimensions.height / 2, offset: 80 };
+    const flowDimensions = { width: 190, height: 50 };
     const stateCount = Object.keys(graphModel.states).length;
     const ctx = document.getElementById("flowCanvas").getContext("2d");
-
     ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
-
-    // Можно расскомментировать для понимания, откуда берется расстановка стейтов
-    // drawCircle(ctx);
 
     let graphView = { "stateViews": {} };
     let currentStateIndex = 0;
     for (let index in graphModel.states) {
         let stateView = {
-            "name": index,
-            "nextStates": graphModel.states[index].connectors.map(connector => connector.to),
-            "incomingArrows": [],
-            "outgoingArrows": []
+            name: index,
+            nextStates: graphModel.states[index].connectors.map(connector => connector.to),
+            incomingArrows: [],
+            outgoingArrows: []
         };
         let outgoingYCoordinate = getStateRectangleYCoordinate(currentStateIndex, stateCount, centralCircle, flowDimensions) + centralCircle.offset;
         if (outgoingYCoordinate > centralCircle.y) {
