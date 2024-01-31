@@ -15,7 +15,9 @@ function visualize() {
 
     renderFlowOnCirle(innerModel);
 
-    document.body.appendChild(drawSvgTreeChart(innerModel, document))
+    let draw = new SvgTreeChart(innerModel, document).draw()
+
+    document.body.insertBefore(draw, document.getElementById("content"))
 }
 
 /**

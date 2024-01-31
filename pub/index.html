@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="js/visualizer.js"></script>
     <script src="lib/convertFlow.js"></script>
     <script src="lib/dommy.js"></script>
+    <script src="lib/flowChart/shapes.js"></script>
     <script src="lib/flowChart/svgTreeChart.js"></script>
+    
+    <script src="js/visualizer.js"></script>
 </head>
 <body>
+    <h1>Визуализатор воркфлоу</h1>
     <div id="content">
-        <p id="Визуализатор воркфлоу"></p>
-        <p><textarea id="flowInput" rows="10" cols="45" name="text"></textarea></p>
+        <p>
+            <textarea id="flowInput" rows="10" cols="45" name="text">
+            </textarea>
+        </p>
         <button id="startDraw" onclick="visualize()">Нарисовать</button>
     </div>
 </body>
