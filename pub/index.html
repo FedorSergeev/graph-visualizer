@@ -3,33 +3,35 @@
 
 <head>
     <link rel="stylesheet" href="style.css">
-    <script src="js/visualizer.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/editor.js" type="text/javascript" charset="utf-8"></script>
-    <script src="lib/convertFlow.js"></script>
-    <script src="lib/dommy.js"></script>
-    <script src="lib/flowChart/shapes.js"></script>
-    <script src="lib/flowChart/svgTreeChart.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="js/visualizer.js" type="module"></script>
+    
 
 </head>
 
-<body onload="loadEditor()" >
-    <div id="content">
-        <p id="Визуализатор воркфлоу"></p>
-        <div id="parent">
-            <div id="text">
-                <p>Вставьте XML</p>
-                <textarea id="flowInput" rows="40" cols="100" name="text"></textarea>
-                <div class="tabpage" id="tabscontent">
-                    <div class="ace_page" id="tabpage_1">
-                    </div>
-               </div>
+<body onload="prepareControls()">
+    <div id="container">
+
+        <div id="a" class="split">
+
+            <div id="xmlPanelHeader">
+                <p>Вставьте XML
+                    <select id="renderType">
+                        
+                      </select>
+                    <button id="startDraw" onclick="visualize()">Нарисовать</button>
+                </p>
             </div>
+
+            <textarea id="flowInput" name="text"></textarea>
+
+        </div>
+        <div id="b" class="split">
             <div id="graph">
                 <p>Граф бизнес-процесса</p>
             </div>
         </div>
-        <button id="startDraw" onclick="visualize()">Нарисовать</button>
+
     </div>
 </body>
 </html>
