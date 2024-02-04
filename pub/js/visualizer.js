@@ -22,7 +22,7 @@ var renderService = {
 /**
  * Подготовка управляющих элементов
  */
-window.prepareControls = function prepareControls() {
+globalThis.prepareControls = function prepareControls() {
     Object.keys(renderService).forEach(key => {
         let option = document.createElement("option");
         option.value = key;
@@ -33,7 +33,7 @@ window.prepareControls = function prepareControls() {
 /**
  * Визуализация стейтов воркфлоу
  */
-window.visualize =function visualize() {
+globalThis.visualize =function visualize() {
     const xmlDoc = getXmlDocument();
     let innerModel = convertFlow(xmlDoc)
     // здесь выбираем метод рендера
@@ -67,10 +67,13 @@ function getXmlDocument() {
 }
 
 function renderFlowAsSvgTreeChart(model) {
-    document.getElementById("graph").innerHTML = '';
-    document.getElementById("graph").append(
-        new SvgTreeChart(model, document).draw()
-    );
+    const place = document.getElementById("graph")
+    const graph = new SvgTreeChart(model, document).draw()
+    place.innerHTML = '';
+    place.append(graph);
+    const container = document.createElement('div')
+    container.innerText = graph.outerHTML
+    place.appendChild(container)
 }
 
 // export {prepareControls, visualize}
