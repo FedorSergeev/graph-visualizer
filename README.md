@@ -18,6 +18,6 @@ node svg-tree-chart.js path/to/source.xml path/to/dest.svg
 `````
 or 
 ```
-node svg-tree-chart.js pub/sample/receipt.xml
+node svg-tree-chart.js path/to/source.xml
 ````
-file "pub/sample/receipt.xml.svg" will be created 
+file "path/to/source.xml.svg" will be created 
