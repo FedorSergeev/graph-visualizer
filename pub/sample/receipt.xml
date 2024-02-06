@@ -19,6 +19,7 @@
     <state name="prepareDataForNext" title="Store data for print" on-enter="receiptHandler#prepareDataForNextActions">
         <state-transition name="to-next" to="showReceipt"/>
         <state-transition name="to-error" to="showDefaultError"/>
+        <state-transition name="to-doFraudmonConfirm" to="doFraudmonConfirm"/>
     </state>
 
     <!-- Тут отображается экран деталей платежа -->
@@ -67,7 +68,6 @@
     </state>
 
     <state name="showDefaultError" title="Show error" on-enter="receiptHandler#showDefaultError">
-        <state-transition name="to-end" to="end"/>
     </state>
 
     <state name="showFeatureOff" title="Show service off error" on-enter="receiptHandler#showFeatureOff">
@@ -76,6 +76,7 @@
 
     <state name="showTechBreakError" title="Show not found error" on-enter="receiptHandler#showTechBreakError">
         <state-transition name="to-end" to="end"/>
+        <state-transition name="очень-очень-очень-очень длинный-нэйм" to="showFeatureOff"/>
     </state>
 
 </flow>

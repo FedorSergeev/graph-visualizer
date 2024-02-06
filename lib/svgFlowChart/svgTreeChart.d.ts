@@ -23,6 +23,7 @@ interface SvgTreeChartConfig extends StateShapeConfig {
     turnRadius?: number;
     marginLeft?: number;
     marginTop?: number;
+    textBoxLength?: number;
 }
 
 interface SvgTreeChart {
