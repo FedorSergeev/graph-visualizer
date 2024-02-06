@@ -42,10 +42,10 @@ globalThis.visualize =function visualize() {
 }
 
 /**
- * Подготовка канваса, зависит от метода отрисовки, 
+ * Подготовка канваса, зависит от метода отрисовки,
  * поэтому стоит вынести в отдельную мапу с лямблами для выбора способа рендера
  * или создавать внутри рисовалки и возвращать ка ноду DOM
- * 
+ *
  * @returns {CanvasRenderingContext2D} контекст для рисования
  */
 function prepare2DCanvas() {
@@ -55,7 +55,7 @@ function prepare2DCanvas() {
     canvasDocElement.id = "flowCanvas";
     canvasDocElement.width = canvasDimensions.width;
     canvasDocElement.height = canvasDimensions.height;
-    canvasDocElement.style.width = '100%' 
+    canvasDocElement.style.width = '100%'
     document.getElementById("graph").append(canvasDocElement);
     return canvasDocElement.getContext('2d')
 }
