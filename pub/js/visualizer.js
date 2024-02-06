@@ -57,7 +57,7 @@ function prepare2DCanvas() {
     canvasDocElement.height = canvasDimensions.height;
     canvasDocElement.style.width = '100%' 
     document.getElementById("graph").append(canvasDocElement);
-    return canvasDocElement.getContext('2d')
+    return canvasDocElement;
 }
 
 function getXmlDocument() {
