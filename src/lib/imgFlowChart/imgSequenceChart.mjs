@@ -31,7 +31,7 @@ export default function renderFlowAsSequence(model, canvas) {
         hasNextColumn = false;
         for (let stateIndex = 0; stateIndex < view.stateColumns[view.stateColumns.length - 1].length; stateIndex++) {
             let currentState = view.stateColumns[view.stateColumns.length - 1][stateIndex].model;
-            for (let connectorIndex = 0; connectorIndex < currentState.connectors.length; connectorIndex++) {
+            for (let connectorIndex = 0; connectorIndex < currentState?.connectors?.length; connectorIndex++) {
                 if (currentState.connectors[connectorIndex].to !== "end" & !usedStateNames.includes(currentState.connectors[connectorIndex].to)) {
                     usedStateNames.push(currentState.connectors[connectorIndex].to);
                     hasNextColumn = true;
@@ -93,7 +93,7 @@ export default function renderFlowAsSequence(model, canvas) {
         for (let y = 0; y < view.stateColumns[i].length; y++) {
 
             let connectorOutgoingOffsetY = 0;
-            for (let connectorIndex = 0; connectorIndex < view.stateColumns[i][y].model.connectors.length; connectorIndex++) {
+            for (let connectorIndex = 0; connectorIndex < view.stateColumns[i][y].model?.connectors?.length; connectorIndex++) {
 
                 if (stateCoordinatesByName[view.stateColumns[i][y].model.connectors[connectorIndex].to]) {
                     let srcX = view.stateColumns[i][y].rectCoordinateX + view.stateBounds.width;

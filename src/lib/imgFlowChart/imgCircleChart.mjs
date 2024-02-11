@@ -158,7 +158,7 @@ function drawFlowPoint(context, x, y) {
  * @param {конфигурация для отрисовки вершины графа} flowDimensions 
  */
 function drawFlowState(context, stateView, stateIndex, numberOfStates, centralCircle, flowDimensions) {
-    console.log("drawFlowState: DEBUG centralCirle = " + centralCircle + ", flowDimensions = " + flowDimensions);
+    //console.log("drawFlowState: DEBUG centralCirle = " + centralCircle + ", flowDimensions = " + flowDimensions);
 
     context.beginPath();
     context.lineWidth = 2;
@@ -199,7 +199,7 @@ function getFlowStateOffsetX(stateIndex, numberOfStates, centralCircle, flowDime
  * @param {конфигурация для отрисофки вершины графа} flowDimensions 
  */
 function getFlowStateOffsetY(stateIndex, numberOfStates, centralCircle, flowDimensions) {
-    console.log("getFlowStateOffsetY: DEBUG centralCirle = " + centralCircle + ", flowDimensions = " + flowDimensions);
+    //console.log("getFlowStateOffsetY: DEBUG centralCirle = " + centralCircle + ", flowDimensions = " + flowDimensions);
     let angle = ((2 * Math.PI) / numberOfStates) * (stateIndex + 1);
     let radius = canvasDimensions.height / 2 - centralCircle.offset;
     return centralCircle.x + radius * Math.sin(angle) - flowDimensions.height / 2;
@@ -214,7 +214,7 @@ function getFlowStateOffsetY(stateIndex, numberOfStates, centralCircle, flowDime
  * @returns отступ по оси Х для указанной вершины графа
  */
 function getStateRectangleXCoordinate(stateIndex, numberOfStates, centralCircle, flowDimensions) {
-    console.log("getStateRectangleXCoordinate: DEBUG centralCirle = " + centralCircle + ", flowDimensions = " + flowDimensions);
+    //console.log("getStateRectangleXCoordinate: DEBUG centralCirle = " + centralCircle + ", flowDimensions = " + flowDimensions);
     return getFlowStateOffsetX(stateIndex, numberOfStates, centralCircle, flowDimensions) + 5;
 }
 
@@ -227,6 +227,6 @@ function getStateRectangleXCoordinate(stateIndex, numberOfStates, centralCircle,
  * @returns отступ по оси Н для указанной вершины графа
  */
 function getStateRectangleYCoordinate(stateIndex, numberOfStates, centralCircle, flowDimensions) {
-    console.log("getStateRectangleYCoordinate: DEBUG centralCirle = " + centralCircle + ", flowDimensions = " + flowDimensions);
+    //console.log("getStateRectangleYCoordinate: DEBUG centralCirle = " + centralCircle + ", flowDimensions = " + flowDimensions);
     return getFlowStateOffsetY(stateIndex, numberOfStates, centralCircle, flowDimensions) - 25;
 }
