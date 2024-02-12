@@ -1,23 +1,45 @@
 # graph-visualizer
 Graph visualization tool
 
+## Distributive usage
+
+To open application - open file [dist/web/index.html](dist/web/index.html)
+
+To create svg chart from command line
+```
+node dist/cli/svg-tree-chart.js path/to/source.xml path/to/dest.svg
+`````
+or 
+```
+node dist/cli/svg-tree-chart.js path/to/source.xml
+````
+
+file "path/to/source.xml.svg" will be created 
 
 
-## start
+
+## Development
+### install live server and development environment
+
+```
+npm i
+```
+
+### start live server (for dev purposes)
 `````
 npm start
 ``````
 
 [Application will be available on port 3000](http://localhost:3000)
 
-[svg tree chart](pub/sample/receipt.xml.svg)
+## in development environment
 
-## Create file from command line
+### Create file from command line
 `````
-node svg-tree-chart.js path/to/source.xml path/to/dest.svg
+node src/cli/svg-tree-chart.mjs path/to/source.xml path/to/dest.svg
 `````
 or 
 ```
-node svg-tree-chart.js path/to/source.xml
+node src/cli/svg-tree-chart.mjs path/to/source.xml
 ````
 file "path/to/source.xml.svg" will be created 

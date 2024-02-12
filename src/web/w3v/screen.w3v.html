@@ -1,0 +1,97 @@
+- компонент для всего экрана
+<main as="app-root">
+    <table style="width: 100%;">
+        <tr style="vertical-align: top;">
+            <td style="height:300px;">
+                <div ref="source" style="width:100%;height:100%;"></div>
+            <td style="width:100px;height:300px;">
+                <array-iterator ref="controls">
+                    <control-button></control-button>
+                </array-iterator>
+                <div style="padding-top: 20px; font-size: 12px;;">
+                    Вставь xml в поле слева и нажми на одну из кнопок
+                </div>
+            </td>
+            <td ref="report" class="report" style="width: 250px;height:300px;color:#FFFFFF;padding:0 30px;">
+                <div>Всего состояний: 100</div>
+            </td>
+        </tr>
+    </table>
+    <div ref="chartView" ></div>
+
+    <script>
+        const editor = appContext.ace.edit(this.ref.source)
+
+        editor.setTheme("ace/theme/monokai")
+        editor.session.setMode("ace/mode/xml")
+        editor.getOption("optionName")
+        this.ref.source.style.fontSize = '14px';
+        this.ref.source.style.fontFamily = "'Courier New', Courier, monospace'"
+
+        this.ref.controls.setData(appContext.buttons, {
+            target: this.ref.chartView,
+            editor
+        })
+    </script>
+</main>
+
+- кнопка
+<button as="control-button">
+    <script>
+        const typeMap = {
+            img: 'img-container',
+            svg: 'svg-container'
+        }
+        const parser = new DOMParser()
+        /**
+         * 
+         * @param button {
+         *  {
+         *    title: string;
+         *    action: (doc: DOMNode) => DOMNode;
+         *  }
+         * } описание кнопки
+         * 
+         * */
+        this.onSetData = (button, options) => {
+            this.innerHTML = button.title
+            this.onclick = () => {
+                Array.prototype.slice.call(options.target.children).forEach(
+                    (e) => {
+                        e.destroy()
+                    }
+                )
+                const source = options.editor.getValue()
+                if(!source?.trim()){
+                    return
+                }
+
+                const xml = parser.parseFromString(source, 'text/xml')
+                const element = button.action(xml)
+                const container = factory.create(typeMap[button.type])
+
+                container.setData(element)
+                container.mount(options.target)
+            }
+        }
+
+
+    </script>
+</button>
+
+<div as="img-container" style="overflow:scroll;background-color: white;">
+    <script>
+        this.onSetData = (element) => {
+            element.style.width = '100%'
+            this.appendChild(element)
+        }
+    </script>
+</div>
+
+<div as="svg-container" style="background-color: white;">
+    <script>
+        this.onSetData = (element) => {
+            this.appendChild(element)
+        }
+    </script>
+</div>
