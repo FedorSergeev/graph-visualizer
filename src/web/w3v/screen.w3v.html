@@ -17,14 +17,14 @@
             </td>
         </tr>
     </table>
-    <div ref="chartView" ></div>
+    <div ref="chartView"></div>
 
     <script>
+        // setTimeout(() => {
         const editor = appContext.ace.edit(this.ref.source)
 
         editor.setTheme("ace/theme/monokai")
         editor.session.setMode("ace/mode/xml")
-        editor.getOption("optionName")
         this.ref.source.style.fontSize = '14px';
         this.ref.source.style.fontFamily = "'Courier New', Courier, monospace'"
 
@@ -32,6 +32,7 @@
             target: this.ref.chartView,
             editor
         })
+        // }, 10000)
     </script>
 </main>
 
@@ -62,7 +63,7 @@
                     }
                 )
                 const source = options.editor.getValue()
-                if(!source?.trim()){
+                if (!source?.trim()) {
                     return
                 }
 
