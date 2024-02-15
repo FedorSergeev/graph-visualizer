@@ -36,11 +36,11 @@ export default function convertFlow(domDocument) {
         }
 
         Object.keys(analizer.external).forEach(key => {
-            if(output.states[key]){
+            if (output.states[key]) {
                 analizer.external[key].connectors.forEach((c) => {
                     output.states[key].connectors.push(c)
                 })
-            } else { 
+            } else {
                 output.states[key] = analizer.external[key]
             }
         })
@@ -71,16 +71,7 @@ function analize(element, result) {
         if (item.tagName === 'flow-transition') {
             result.external = result.external || {}
 
-            let externalName
-            const externalKey = externalName = item.getAttribute('subflow')
-            
-            // externals[externalKey] = externals[externalKey] || []
-
-            // externals[externalKey].length &&
-            //     (externalName = externalKey +
-            //         ' (' + externals[externalKey].length + ')')
-
-            // externals[externalKey].push(externalName)
+            let externalName = item.getAttribute('subflow')
 
             result.external['#' + externalName] = {
                 type: 'external',

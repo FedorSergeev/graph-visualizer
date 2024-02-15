@@ -32,8 +32,6 @@
     "apiVersion",
     "enterState",
     "terminator",
-    "description",
-    "properties",
     "states"
   ],
   "definitions": {
@@ -65,6 +63,9 @@
               },
               "to": {
                 "type": "string"
+              },
+              "properties": {
+                "type": "object"
               }
             },
             "required": [
@@ -75,10 +76,7 @@
         }
       },
       "required": [
-        "type",
-        "description",
-        "properties",
-        "connectors"
+        "type"
       ]
     }
   }

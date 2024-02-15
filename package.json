@@ -8,13 +8,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "build": "webpack"
+    "build": "node build.js"
   },
   "author": "",
   "license": "MIT",
-  "dependencies": {
-  },
   "devDependencies": {
+    "@codemirror/commands": "^6.3.3",
+    "@codemirror/lang-xml": "^6.0.2",
+    "@codemirror/state": "^6.4.0",
+    "@codemirror/view": "^6.24.0",
     "@xmldom/xmldom": "^0.8.10",
     "express": "^4.18.2",
     "w3view": "^1.0.7",

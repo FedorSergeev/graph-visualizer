@@ -195,6 +195,7 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
         const columnWidth = conf.columnWidth
 
         let deep = (toState.column > fromState.column ? toState.column: fromState.column) + 1
+        let intervals = []
 
         for (let i = toState.row+1; i < fromState.row; i++) {
             if (rowIndex[i].deep >= fromState.deep) {

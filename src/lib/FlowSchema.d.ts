@@ -2,7 +2,11 @@ interface StateSchema {
     type: "decision" | "process" | "external";
     description?: string;
     properties?: object;
-    connectors?: { name: string, to: string }[]
+    connectors?: { 
+        name: string, 
+        to: string,
+        properties?: Map<string, any>
+    }[]
 }
 
 interface FlowSchema {
