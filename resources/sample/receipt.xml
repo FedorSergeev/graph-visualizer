@@ -1,82 +1,95 @@
 <flow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      start-state="onEnter">
+    start-state="onEnter">
     <state name="onEnter" title="Enter" on-enter="receiptHandler#onEnter">
-        <state-transition name="to-next" to="loadHistory"/>
-        <state-transition name="to-error" to="showInvalidInputParamsError"/>
-        <state-transition name="to-feature-off" to="showFeatureOff"/>
+        <state-transition name="to-next" to="loadHistory" />
+        <state-transition name="to-error" to="showInvalidInputParamsError" />
+        <state-transition name="to-feature-off" to="showFeatureOff" />
+        <flow-transition name="stornoCard" subflow="StornoCard"
+            on-return="receiptHandler#onReturnFromStorno" />
     </state>
     <state name="onExit" title="Exit" on-enter="receiptHandler#onExit">
-        <state-transition name="to-end" to="end"/>
+        <state-transition name="to-end" to="end" />
     </state>
     <state name="loadHistory" title="Load history data" on-enter="receiptHandler#loadHistory">
-        <state-transition name="to-next" to="doFraudmonConfirm"/>
-        <state-transition name="to-error" to="showHistoryNotFoundError"/>
+        <state-transition name="to-next" to="doFraudmonConfirm" />
+        <state-transition name="to-error" to="showHistoryNotFoundError" />
     </state>
-    <state name="doFraudmonConfirm" title="Do fraudmon confirm" on-enter="receiptHandler#doFraudmonConfirm">
-        <state-transition name="to-next" to="prepareDataForNext"/>
-        <state-transition name="to-error" to="showFraudmonError"/>
+    <state name="doFraudmonConfirm" title="Do fraudmon confirm"
+        on-enter="receiptHandler#doFraudmonConfirm">
+        <state-transition name="to-next" to="prepareDataForNext" />
+        <state-transition name="to-error" to="showFraudmonError" />
     </state>
-    <state name="prepareDataForNext" title="Store data for print" on-enter="receiptHandler#prepareDataForNextActions">
-        <state-transition name="to-next" to="showReceipt"/>
-        <state-transition name="to-error" to="showDefaultError"/>
-        <state-transition name="to-doFraudmonConfirm" to="doFraudmonConfirm"/>
+    <state name="prepareDataForNext" title="Store data for print"
+        on-enter="receiptHandler#prepareDataForNextActions">
+        <state-transition name="to-next" to="showReceipt" />
+        <state-transition name="to-error" to="showDefaultError" />
+        <state-transition name="to-doFraudmonConfirm" to="doFraudmonConfirm" />
     </state>
 
     <!-- Тут отображается экран деталей платежа -->
 
     <state name="showReceipt" title="Show receipt" on-enter="receiptHandler#showReceipt">
-        <event name="next"/>
-        <event name="to-back"/>
-        <event name="to-end"/>
-        <event name="to-exit"/>
-        <state-transition name="to-end" to="end"/>
-        <state-transition name="to-reload" to="reloadData"/>
-        <state-transition name="to-error" to="processStornoError"/>
-        <state-transition name="to-back" to="showReceiptAgain"/>
-        <state-transition name="to-next" to="reloadData"/>
-        <flow-transition name="stornoCard" subflow="StornoCard" on-return="receiptHandler#onReturnFromStorno"/>
-        <flow-transition name="stornoCash" subflow="StornoCash" on-return="receiptHandler#onReturnFromStorno"/>
+        <event name="next" />
+        <event name="to-back" />
+        <event name="to-end" />
+        <event name="to-exit" />
+        <state-transition name="to-end" to="end" />
+        <state-transition name="to-reload" to="reloadData" />
+        <state-transition name="to-error" to="processStornoError" />
+        <state-transition name="to-back" to="showReceiptAgain" />
+        <state-transition name="to-next" to="reloadData" />
+        <flow-transition name="stornoCard" subflow="StornoCard"
+            on-return="receiptHandler#onReturnFromStorno" />
+        <flow-transition name="stornoCash" subflow="StornoCash"
+            on-return="receiptHandler#onReturnFromStorno" />
     </state>
 
     <state name="showReceiptAgain" title="stub step showReceipt" on-enter="receiptHandler#toNext">
-        <state-transition name="to-next" to="showReceipt"/>
+        <state-transition name="to-next" to="showReceipt" />
     </state>
 
     <state name="processStornoError" title="" on-enter="receiptHandler#processStornoError">
-        <state-transition name="to-invalid-input-params" to="showInvalidInputParamsError"/>
-        <state-transition name="to-error" to="showDefaultError"/>
-        <state-transition name="to-feature-off" to="showFeatureOff"/>
-        <state-transition name="to-show-tb-error" to="showTechBreakError"/>
+        <state-transition name="to-prepare" to="prepareDataForNext" />
+
+        <state-transition name="to-invalid-input-params" to="showInvalidInputParamsError" />
+        <state-transition name="to-error" to="showDefaultError" />
+        <state-transition name="to-feature-off" to="showFeatureOff" />
+        <state-transition name="to-show-tb-error" to="showTechBreakError" />
     </state>
 
     <state name="reloadData" title="Reload data if changed" on-enter="receiptHandler#reloadData">
-        <state-transition name="to-next" to="showReceipt"/>
-        <state-transition name="to-error" to="showDefaultError"/>
+        <state-transition name="to-next" to="showReceipt" />
+        <state-transition name="to-fraud" to="doFraudmonConfirm" />
+        <state-transition name="to-error" to="showDefaultError" />
     </state>
 
     <state name="showInvalidInputParamsError" title="Show fraudmon error"
-           on-enter="receiptHandler#showInvalidInputParamsError">
-        <state-transition name="to-end" to="end"/>
+        on-enter="receiptHandler#showInvalidInputParamsError">
+        <state-transition name="to-end" to="end" />
     </state>
 
-    <state name="showFraudmonError" title="Show fraudmon error" on-enter="receiptHandler#showFraudmonError">
-        <state-transition name="to-end" to="end"/>
+    <state name="showFraudmonError" title="Show fraudmon error"
+        on-enter="receiptHandler#showFraudmonError">
+        <state-transition name="to-end" to="end" />
     </state>
 
-    <state name="showHistoryNotFoundError" title="Show error" on-enter="receiptHandler#showHistoryNotFoundError">
-        <state-transition name="to-end" to="end"/>
+    <state name="showHistoryNotFoundError" title="Show error"
+        on-enter="receiptHandler#showHistoryNotFoundError">
+        <state-transition name="to-end" to="end" />
     </state>
 
     <state name="showDefaultError" title="Show error" on-enter="receiptHandler#showDefaultError">
     </state>
 
-    <state name="showFeatureOff" title="Show service off error" on-enter="receiptHandler#showFeatureOff">
-        <state-transition name="to-end" to="end"/>
+    <state name="showFeatureOff" title="Show service off error"
+        on-enter="receiptHandler#showFeatureOff">
+        <state-transition name="to-end" to="end" />
     </state>
 
-    <state name="showTechBreakError" title="Show not found error" on-enter="receiptHandler#showTechBreakError">
-        <state-transition name="to-end" to="end"/>
-        <state-transition name="очень-очень-очень-очень длинный-нэйм" to="showFeatureOff"/>
+    <state name="showTechBreakError" title="Show not found error"
+        on-enter="receiptHandler#showTechBreakError">
+        <state-transition name="to-end" to="end" />
+        <state-transition name="очень-очень-очень-очень длинный-нэйм" to="showFeatureOff" />
     </state>
 
 </flow>

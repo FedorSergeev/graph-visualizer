@@ -74,7 +74,7 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
         //tree
         drawState(startPoint, flowModel.enterState, 1, 1)
 
-        const numColumns = (rowIndex.filter(el => el).map((el) => el.length).sort((a, b) => b - a)[0] + 1) || 0
+        const numColumns = (rowIndex.filter(el => el).map((el) => el.deep).sort((a, b) => b - a)[0] + 1) || 0
 
         root.attributes.height = (rowIndex.length) * conf.rowHeight
         root.attributes.width = numColumns * conf.columnWidth + 2 * conf.marginLeft
@@ -104,7 +104,7 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
         !terminator && (drawnShapes[stateName] = draw)
 
         rowIndex[row] = draw
-        draw.length = column
+        draw.deep = column
         draw.column = column
         draw.row = row
 
@@ -194,15 +194,16 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
         const turnRadius = conf.turnRadius
         const columnWidth = conf.columnWidth
 
-        let deep = fromState.column + 1
+        let deep = (toState.column > fromState.column ? toState.column: fromState.column) + 1
 
-        for (let i = toState.row; i < fromState.row; i++) {
-            if (rowIndex[i].length >= fromState.length) {
-                deep = fromState.length = rowIndex[i].length + 1
+        for (let i = toState.row+1; i < fromState.row; i++) {
+            if (rowIndex[i].deep >= fromState.deep) {
+                fromState.deep = rowIndex[i].deep + 1
+            }
+            if(rowIndex[i].deep >= deep) {
+                deep = rowIndex[i].deep + 1
             }
         }
-
-
 
         let px = 0, py = 0
         let tx = 0, ty = 0
