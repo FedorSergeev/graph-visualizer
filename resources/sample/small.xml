@@ -1,0 +1,16 @@
+<flow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    start-state="onEnter">
+    
+    <state name="onEnter" title="Enter" on-enter="receiptHandler#onEnter">
+        <state-transition name="to-next" to="showReceipt" />
+    </state>
+
+    <!-- Тут отображается экран деталей платежа -->
+
+    <state name="showReceipt" title="Show receipt" on-enter="receiptHandler#showReceipt">
+        <event name="next" />
+        <event name="to-back" />
+        <event name="to-end" />
+        <event name="to-exit" />
+    </state>
+</flow>
