@@ -1,27 +1,29 @@
 - компонент для всего экрана
 <main as="app-root">
-    <table style="width: 100%;">
-        <tr style="vertical-align: top;">
-            <td style="height:300px;">
-                <div ref="source" style="width:100%;height:100%;"></div>
-            <td style="width:100px;height:300px;">
-                <array-iterator ref="controls">
-                    <control-button></control-button>
-                </array-iterator>
-                <div style="padding-top: 20px; font-size: 12px;;">
-                    Вставь xml в поле слева и нажми на одну из кнопок
-                </div>
-            </td>
-            <td ref="report" class="report" style="width: 250px;height:300px;color:#FFFFFF;padding:0 30px;">
-                <div>Всего состояний: 100</div>
-            </td>
-        </tr>
-    </table>
-    <div ref="chartView"></div>
-
+    <h1 style="height:80px;width:100%;position:fixed;left:0; top:0;z-index: 10;min-width: 400px;padding-left: 40px;">
+        Анализ Workflow</h1>
+    <div style="margin-top:80px;">
+        <table style="width: 100%;">
+            <tr style="vertical-align: top;">
+                <td style="height:300px;">
+                    <div ref="source" style="width:100%;height:100%;"></div>
+                <td style="width:100px;height:300px;">
+                    <array-iterator ref="controls">
+                        <control-button></control-button>
+                    </array-iterator>
+                    <div style="padding: 20px 5px 0 5px; font-size: 16px;;">
+                        Вставь xml в поле слева и нажми на одну из кнопок
+                    </div>
+                </td>
+                <td ref="report" class="report" style="width: 250px;height:300px;color:#FFFFFF;padding:0 30px;">
+                    <div>Всего состояний: 100</div>
+                </td>
+            </tr>
+        </table>
+        <div ref="chartView"></div>
+    </div>
     <script>
-        // setTimeout(() => {
-        const editor = appContext.ace.edit(this.ref.source)
+        const editor = ace.edit(this.ref.source)
 
         editor.setTheme("ace/theme/monokai")
         editor.session.setMode("ace/mode/xml")
@@ -32,7 +34,6 @@
             target: this.ref.chartView,
             editor
         })
-        // }, 10000)
     </script>
 </main>
 
@@ -40,19 +41,24 @@
 <button as="control-button">
     <script>
         const typeMap = {
-            img: 'img-container',
+            canvas: 'img-container',
             svg: 'svg-container'
         }
         const parser = new DOMParser()
         /**
          * 
-         * @param button {
+         * @param {
          *  {
          *    title: string;
          *    action: (doc: DOMNode) => DOMNode;
          *  }
-         * } описание кнопки
-         * 
+         * } button описание кнопки
+         * @param {
+         *  {
+         *      target: Node;
+         *      editor: {getValue: ()=>string}
+         *  }
+         * } options - настройки - место для картинки и источник данных для рисования
          * */
         this.onSetData = (button, options) => {
             this.innerHTML = button.title
@@ -69,18 +75,18 @@
 
                 const xml = parser.parseFromString(source, 'text/xml')
                 const element = button.action(xml)
-                const container = factory.create(typeMap[button.type])
+                const container = factory.create(typeMap[element.tagName.toLowerCase()])
+
+                container.mount(options.target)
 
                 container.setData(element)
-                container.mount(options.target)
             }
         }
-
 
     </script>
 </button>
 
-<div as="img-container" style="overflow:scroll;background-color: white;">
+<div as="img-container" style="background-color: #FFFFFF;">
     <script>
         this.onSetData = (element) => {
             element.style.width = '100%'
@@ -89,10 +95,43 @@
     </script>
 </div>
 
-<div as="svg-container" style="background-color: white;">
+<div as="svg-container" style="background-color: #FFFFFF;">
     <script>
-        this.onSetData = (element) => {
-            this.appendChild(element)
+        let width
+        let height
+
+        this.onSetData = (svg) => {
+            width  = svg.getAttribute('width') * 1
+            height = svg.getAttribute('height') * 1
+
+            this.appendChild(svg)
+
+            let scaleIt = () => scaleTo(svg, this)
+
+            window.addEventListener('resize', scaleIt)
+
+            this.onDestroy = () => {
+                window.removeEventListener('resize', scaleIt)
+            }
+
+            scaleTo(svg, this)
+
         }
+
+        const scaleTo = (svg, target) => {
+
+            let scale = target.offsetWidth / width || 1
+
+            let dx = Math.floor((target.offsetWidth - width))
+            let dy = Math.floor((scale * height - height))
+
+            svg.setAttribute('viewBox', [0, 0, width, scale < 1 ? height / scale : height].join(' '))
+
+            svg.setAttribute('width', target.offsetWidth)
+
+            // this.ref.panel.innerText = dx + ' x ' + dy + ' (' + scale + ') '
+        }
+
     </script>
+    <!-- <div ref="panel" style="position:absolute; z-index: 100;color:black;"></div> -->
 </div>
