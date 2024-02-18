@@ -54,7 +54,10 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
 
     const rowIndex = []
     const drawnShapes = {}
-
+    /**
+     * @field {{s:number, e:number}[]} busy[column]
+     */
+    let busyColumn = []
 
     /**
      * @method
@@ -69,12 +72,11 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
         startPoint.joins = calcJoins(startPoint)
 
         content.children.push(startPoint)
-        // drawnShapes.$start = startPoint
 
         //tree
         drawState(startPoint, flowModel.enterState, 1, 1)
 
-        const numColumns = (rowIndex.filter(el => el).map((el) => el.deep).sort((a, b) => b - a)[0] + 1) || 0
+        const numColumns = busyColumn.length
 
         root.attributes.height = (rowIndex.length) * conf.rowHeight
         root.attributes.width = numColumns * conf.columnWidth + 2 * conf.marginLeft
@@ -100,14 +102,15 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
 
         draw.joins = calcJoins(draw)
 
-        content.children.push(draw)
-        !terminator && (drawnShapes[stateName] = draw)
+        !terminator &&
+            (drawnShapes[stateName] = draw)
 
+        busyColumn[column] = [{ s: row, e: row }]
         rowIndex[row] = draw
-        draw.deep = column
         draw.column = column
         draw.row = row
 
+        content.children.push(draw)
         content.children.push(drawConnector(parentState, draw, connectorName))
 
         state.connectors?.forEach((el) => {
@@ -153,7 +156,7 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
         return {
             tag: 'g',
             attributes: {
-                id: 'connector-forward/'+name
+                id: 'connector-forward/' + name
             },
             children: [
                 {
@@ -194,17 +197,7 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
         const turnRadius = conf.turnRadius
         const columnWidth = conf.columnWidth
 
-        let deep = (toState.column > fromState.column ? toState.column: fromState.column) + 1
-        let intervals = []
-
-        for (let i = toState.row+1; i < fromState.row; i++) {
-            if (rowIndex[i].deep >= fromState.deep) {
-                fromState.deep = rowIndex[i].deep + 1
-            }
-            if(rowIndex[i].deep >= deep) {
-                deep = rowIndex[i].deep + 1
-            }
-        }
+        let deep = calcDeep(fromState, toState)
 
         let px = 0, py = 0
         let tx = 0, ty = 0
@@ -212,7 +205,7 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
         return {
             tag: 'g',
             attributes: {
-                id: 'connector-backward/'+name
+                id: 'connector-backward/' + name
             },
             children: [
                 {
@@ -249,6 +242,42 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
         }
     }
 
+    function calcDeep(fromState, toState) {
+        let deep = (toState.column >= fromState.column ? toState.column + 1 : fromState.column) + 1
+
+        // определить свободную от шейпов колонку
+        for (let i = toState.row + 1; i < fromState.row; i++) {
+            if (rowIndex[i].column >= deep) {
+                deep = rowIndex[i].column + 1
+            }
+        }
+        // определить свободную от интервалов колонку
+        const s = toState.row + 1
+        const e = fromState.row - 1
+
+        while (true) {
+            if (!busyColumn[deep]) {
+                busyColumn[deep] = [{ s, e }]
+                break
+            }
+            if (busyColumn[deep].every(
+                (interval) => (
+                    interval.e == e || (
+                        (interval.s < s || interval.s > e) &&
+                        (interval.e < s || interval.e > e) &&
+                        (s < interval.s || s > interval.e)
+                    )
+                )
+            )) {
+                busyColumn[deep].push({ s, e })
+                break
+            }
+            deep++
+        }
+
+        return deep
+    }
+
     function textBox(text = '', width = 1, x = 0, y = 0) {
         const words = text.split(/\s/)
         const lines = []
@@ -263,23 +292,23 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
             }
 
             if (line.length >= width) {
-                let item 
-                lines.push(item = 
-                    {
-                        tag: 'tspan',
-                        attributes: {
-                            x: x,
-                            dy: conf.fontSize
-                        },
-                        children: [
-                            line
-                        ]
-                    }
+                let item
+                lines.push(item =
+                {
+                    tag: 'tspan',
+                    attributes: {
+                        x: x,
+                        dy: conf.fontSize
+                    },
+                    children: [
+                        line
+                    ]
+                }
                 )
                 conf.textBoxLength < line.length &&
-                (item.attributes['font-size'] = conf.fontSize * conf.textBoxLength / line.length),
+                    (item.attributes['font-size'] = conf.fontSize * conf.textBoxLength / line.length),
 
-                line = ''
+                    line = ''
             }
         })
 
@@ -294,4 +323,5 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
             children: lines
         }
     }
+
 }

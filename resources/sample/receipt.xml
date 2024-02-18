@@ -4,8 +4,7 @@
         <state-transition name="to-next" to="loadHistory" />
         <state-transition name="to-error" to="showInvalidInputParamsError" />
         <state-transition name="to-feature-off" to="showFeatureOff" />
-        <flow-transition name="stornoCard" subflow="StornoCard"
-            on-return="receiptHandler#onReturnFromStorno" />
+        <flow-transition name="stornoCard" subflow="StornoCard" on-return="receiptHandler#onReturnFromStorno" />
     </state>
     <state name="onExit" title="Exit" on-enter="receiptHandler#onExit">
         <state-transition name="to-end" to="end" />
@@ -71,6 +70,7 @@
     <state name="showFraudmonError" title="Show fraudmon error"
         on-enter="receiptHandler#showFraudmonError">
         <state-transition name="to-end" to="end" />
+        <state-transition name="to-showReceiptAgain" to="showReceiptAgain" />
     </state>
 
     <state name="showHistoryNotFoundError" title="Show error"
