@@ -5,6 +5,7 @@ interface StateShapeConfig {
     shapeWidth?: number;
     strokeColor?: string;
     bgColor?: string;
+    bgColorInteractive?: string,
     textColor?: string;
     fontFace?: string;
     fontSize?: number;
@@ -27,6 +28,6 @@ interface SvgTreeChartConfig extends StateShapeConfig {
 }
 
 interface SvgTreeChart {
-    constructor: (flowModel: FlowSchema, document: Document, config: SvgTreeChartConfig)=>void;
+    constructor: (flowModel: FlowSchema, document: Document, config: SvgTreeChartConfig) => void;
     draw: () => Node
 }

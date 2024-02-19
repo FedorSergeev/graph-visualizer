@@ -58,7 +58,7 @@ function analize(element, result) {
     for (let i = 0; i < element.childNodes.length; i++) {
         let item = element.childNodes.item(i)
         if (item.tagName === 'event') {
-            result.type = 'process'
+            result.type = 'interactive'
             continue
         }
         if (item.tagName === 'state-transition') {

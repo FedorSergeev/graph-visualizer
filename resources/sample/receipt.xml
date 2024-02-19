@@ -3,10 +3,21 @@
     <state name="onEnter" title="Enter" on-enter="receiptHandler#onEnter">
         <state-transition name="to-next" to="loadHistory" />
         <state-transition name="to-error" to="showInvalidInputParamsError" />
+        <state-transition name="to-ещ" to="ещещ" />
         <state-transition name="to-feature-off" to="showFeatureOff" />
-        <flow-transition name="stornoCard" subflow="StornoCard" on-return="receiptHandler#onReturnFromStorno" />
+        <flow-transition name="stornoCard" subflow="StornoCard"
+            on-return="receiptHandler#onReturnFromStorno" />
     </state>
     <state name="onExit" title="Exit" on-enter="receiptHandler#onExit">
+        <state-transition name="to-end" to="onExit1" />
+    </state>
+    <state name="onExit1" title="Exit" on-enter="receiptHandler#onExit">
+        <state-transition name="to-end" to="onExit2" />
+    </state>
+    <state name="onExit2" title="Exit" on-enter="receiptHandler#onExit">
+        <state-transition name="to-end" to="onExit3" />
+    </state>
+    <state name="onExit3" title="Exit" on-enter="receiptHandler#onExit">
         <state-transition name="to-end" to="end" />
     </state>
     <state name="loadHistory" title="Load history data" on-enter="receiptHandler#loadHistory">

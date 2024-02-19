@@ -1,4 +1,5 @@
 import convertFlow from "../../lib/convertFlow.mjs";
+import analyzer from "../../lib/flowSchemaAnalyzer.js";
 import renderFlowOnCirle from "../../lib/imgFlowChart/imgCircleChart.mjs";
 import renderFlowAsSequence from "../../lib/imgFlowChart/imgSequenceChart.mjs";
 import SvgTreeChart from "../../lib/svgFlowChart/svgTreeChart.mjs";
@@ -26,7 +27,9 @@ export default {
             title: 'circle chart (png)',
             action: (xmlDoc) => {
                 const canvas = prepare2DCanvas()
-                renderFlowOnCirle(convertFlow(xmlDoc), canvas)
+                const flowSchema = convertFlow(xmlDoc)
+                renderFlowOnCirle(flowSchema, canvas)
+                canvas.report = analyzer(flowSchema)
                 return canvas
             }
         },
@@ -34,14 +37,19 @@ export default {
             title: 'flow chart (png)',
             action: (xmlDoc) => {
                 const canvas = prepare2DCanvas()
-                renderFlowAsSequence(convertFlow(xmlDoc), canvas)
+                const flowSchema = convertFlow(xmlDoc)
+                renderFlowAsSequence(flowSchema, canvas)
+                canvas.report = analyzer(flowSchema)
                 return canvas
             }
         },
         {
             title: 'tree chart (svg)',
             action: (xmlDoc) => {
-                return new SvgTreeChart(convertFlow(xmlDoc), document).draw()
+                const flowSchema = convertFlow(xmlDoc)
+                const svg = new SvgTreeChart(flowSchema, document).draw()
+                svg.report = analyzer(flowSchema)
+                return svg
             }
         }
     ]

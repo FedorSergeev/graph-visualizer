@@ -3,6 +3,10 @@
     color: white;
 }
 
+body{
+    overflow-y: scroll;
+}
+
 body,
 h1 {
     background-color: #333333;
@@ -22,6 +26,10 @@ svg * {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+h4 {
+    margin: 10px 0 0 0;
+}
+
 button {
     height: 50px;
     width: 100%;
@@ -31,7 +39,16 @@ button {
     border-radius: 10px;
 }
 
-.report {
+div.report {
+    width: 100%;
     font-family: 'Courier New', Courier, monospace;
     font-size: 14px;
+    color: #FFFFFF;
+    background-color: #333333;
+}
+
+td.report {
+    width: 400px;
+    height: 300px;
+    padding: 0 20px;
 }

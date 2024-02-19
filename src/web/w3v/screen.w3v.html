@@ -15,8 +15,8 @@
                         Вставь xml в поле слева и нажми на одну из кнопок
                     </div>
                 </td>
-                <td ref="report" class="report" style="width: 250px;height:300px;color:#FFFFFF;padding:0 30px;">
-                    <div>Всего состояний: 100</div>
+                <td class="report">
+                    <report-box ref="report" class="report"></report-boxv>
                 </td>
             </tr>
         </table>
@@ -32,6 +32,7 @@
 
         this.ref.controls.setData(appContext.buttons, {
             target: this.ref.chartView,
+            reportTarget: this.ref.report,
             editor
         })
     </script>
@@ -56,6 +57,7 @@
          * @param {
          *  {
          *      target: Node;
+         *      reportTarget: Node;
          *      editor: {getValue: ()=>string}
          *  }
          * } options - настройки - место для картинки и источник данных для рисования
@@ -68,6 +70,8 @@
                         e.destroy()
                     }
                 )
+                options.reportTarget.setData()
+
                 const source = options.editor.getValue()
                 if (!source?.trim()) {
                     return
@@ -78,6 +82,7 @@
                 const container = factory.create(typeMap[element.tagName.toLowerCase()])
 
                 container.mount(options.target)
+                options.reportTarget.setData(element.report)
 
                 container.setData(element)
             }
@@ -86,7 +91,9 @@
     </script>
 </button>
 
+- контейнер для canvas
 <div as="img-container" style="background-color: #FFFFFF;">
+    <container-controls ref="controls"></container-controls>
     <script>
         this.onSetData = (element) => {
             element.style.width = '100%'
@@ -94,14 +101,15 @@
         }
     </script>
 </div>
-
+- контейнер для svg
 <div as="svg-container" style="background-color: #FFFFFF;">
+    <container-controls ref="controls"></container-controls>
     <script>
         let width
         let height
 
         this.onSetData = (svg) => {
-            width  = svg.getAttribute('width') * 1
+            width = svg.getAttribute('width') * 1
             height = svg.getAttribute('height') * 1
 
             this.appendChild(svg)
@@ -134,4 +142,74 @@
 
     </script>
     <!-- <div ref="panel" style="position:absolute; z-index: 100;color:black;"></div> -->
+</div>
+- кнопки для контейнеров (canvas и svg)
+<div as="container-controls" style="position: relative;">
+    <div style="position: absolute; right: 30px; top: 20px;">
+        <!-- <button ref="copy" style="font-size: 20px;height: 40px;width: 40px;">copy</button> -->
+        <!-- <button ref="expand" style="font-size: 30px;height: 40px;width: 40px;">+</button> -->
+    </div>
+</div>
+
+- панель для отчёта
+<div as="report-box">
+    <div ref="box">
+        <h3 style="margin:0 0 10px;">Отчёт</h3>
+
+        <h4>Состояния</h4>
+        <array-iterator usetag="div" ref="states">
+            <report-row usetag="div"></report-row>
+        </array-iterator>
+
+        <h4>Переходы</h4>
+        <array-iterator usetag="div" ref="joins">
+            <report-row usetag="div"></report-row>
+        </array-iterator>
+    </div>
+    <script>
+        const words = {
+            states: {
+                count: 'Количество общее',
+                decision: 'Разветвителей',
+                process: 'Процессов',
+                interactive: 'Интерактивных',
+                external: 'Внешних вызовов',
+                unused: 'Количество не достижимых',
+                unusedList: 'Недостижимы'
+            },
+            joins: {
+                total: "Количество общее",
+                badTargets: "Выходов в отсутствующие состояния",
+                terminatorStates: "Состояний без переходов",
+                terminators: "Выходов из процесса"
+            }
+        }
+
+        this.ref.box.style.display = 'none'
+
+        this.onSetData = (report) => {
+            this.ref.box.style.display = ''
+            if (!report) {
+                this.ref.box.style.display = 'none'
+            }
+            const statesReport = report?.states?.filter((row) => !!row?.value)
+            this.ref.states.setData(statesReport, words.states)
+
+            const joinsReport = report?.joins?.filter((row) => !!row?.value)
+            this.ref.joins.setData(joinsReport, words.joins)
+        }
+
+    </script>
+</div>
+
+- строка отчёта
+<div as="report-row">
+    <div tagname="span" ref="title"></div>
+    <div tagname="span" ref="value" style="padding-left:10px;font-weight: bold;"></div>
+    <script>
+        this.onSetData = (row, words) => {
+            this.ref.title.innerText = (words[row?.name] || row?.name) + ':'
+            this.ref.value.innerText = row?.value
+        }
+    </script>
 </div>
