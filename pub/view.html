@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+</head>
+
+<body>
+    <div id="container">
+        
+        <div id="a" class="split">
+            
+                <div><p>Вставьте XML<button id="startDraw" onclick="visualize()">Нарисовать</button></p></div>
+                
+                <textarea id="flowInput" name="text"></textarea>
+        
+        </div>
+        <div id="b" class="split">
+            <div id="graph">
+                <p>Граф бизнес-процесса</p>
+            </div>
+        </div>
+
+    </div>
+    
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="js/visualizer.js"></script>
+    <script>
+        $("#a").resizable({
+    resize: function() {
+        $("#b").width($(window).width() - $(this).width());
+        
+        $("#b").height($(this).height());
+        
+        $("#flowInput").width($("#a").width());
+        $("#flowInput").height($("#a").height());
+    }
+});
+$("#b").resizable({
+    resize: function() {
+        $("#a").width($(window).width() - $(this).width());
+        
+        $("#a").height($(this).height());
+        $("#flowInput").width($("#a").width());
+        $("#flowInput").height($("#a").height());
+    }
+});
+    </script>
+</body>
+
+</html>
