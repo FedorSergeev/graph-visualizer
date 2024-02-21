@@ -1,5 +1,5 @@
 interface StateSchema {
-    type: "decision" | "process" | "external";
+    type: "decision" | "process" | "interactive" | "external";
     description?: string;
     properties?: object;
     connectors?: { 

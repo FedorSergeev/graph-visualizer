@@ -8,6 +8,7 @@ const defaultConfig = {
     shapeWidth: 80,
     strokeColor: '#000000',
     bgColor: '#CCCCFF',
+    bgColorInteractive: '#CCFFFF',
     textColor: '#000000',
     fontFace: 'sans-serif',
     fontSize: 10
@@ -18,11 +19,11 @@ const defaultConfig = {
  */
 const shape = {}
 
-shape.process = (stateName, stateStructure, config = defaultConfig) => {
+shape.process = shape.interactive = (stateName, stateStructure, config = defaultConfig) => {
     const width = config.shapeWidth
     const height = config.shapeHeight
 
-    return {
+    const result = {
         width,
         height,
 
@@ -40,7 +41,7 @@ shape.process = (stateName, stateStructure, config = defaultConfig) => {
                     height,
                     rx: 0.5 * config.gridSize,
                     ry: 0.5 * config.gridSize,
-                    fill: config.bgColor,
+                    fill: stateStructure.type === "interactive" ? config.bgColorInteractive : config.bgColor,
                     stroke: config.strokeColor
                 }
             },
@@ -71,6 +72,8 @@ shape.process = (stateName, stateStructure, config = defaultConfig) => {
             }
         ]
     }
+
+    return result
 }
 
 shape.decision = (stateName, stateStructure, config = defaultConfig) => {

@@ -14,6 +14,7 @@ const defaultConfig = {
     shapeWidth: 80,
     strokeColor: '#000000',
     bgColor: '#CCCCFF',
+    bgColorInteractive: '#CCFFFF',
     textColor: '#000000',
     fontFace: 'sans-serif',
     fontSize: 10
