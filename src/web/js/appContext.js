@@ -22,6 +22,7 @@ function prepare2DCanvas() {
 }
 
 export default {
+    target: document.body,
     buttons: [
         {
             title: 'circle chart (png)',

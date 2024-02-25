@@ -1,0 +1,185 @@
+-контрол для экрана
+<div as="screen-control" style="position: relative;">
+    <div class="container-control-position" style="z-index: 100;">
+        <div style="color:black;display: inline-block;margin-right: 10px;font-size: 20px;">
+            <input type="text" ref="scale" style="color:inherit;width:50px;text-align:right;font-size: 20px;">
+            <span style="color:inherit;">&nbsp;%</span>
+        </div>
+        <button ref="plus" class="container-control" title="увеличить">+</button>
+        <button ref="zero" class="container-control" title="к размеру окна">[]</button>
+        <button ref="minus" class="container-control" title="уменьшить">&minus;</button>
+        <button ref="close" class="container-control" style="margin-left: 10px;" title="закрыть">X</button>
+    </div>
+    <script>
+
+        this.onSetData = ({ setScale, setTranslate, reset }) => {
+
+            this.ref.scale.value = reset() * 100
+            this.ref.scale.focus()
+
+            this.ref.plus.onclick = () => {
+                this.ref.scale.value = Number.parseInt(this.ref.scale.value) + 10
+                onscale()
+            }
+
+            this.ref.minus.onclick = () => {
+                this.ref.scale.value = Number.parseInt(this.ref.scale.value) - 10
+                onscale()
+            }
+
+            this.ref.zero.onclick = () => {
+                this.ref.scale.value = reset() * 100
+            }
+
+            const onscale = this.ref.scale.onchange = () => {
+                let value = Number.parseInt(this.ref.scale.value)
+                if (value < 10) {
+                    value = this.ref.scale.value = 10
+                }
+
+                if (isNaN(value) || !value) {
+                    this.ref.scale.value = 100
+                    setScale(1)
+                    return
+                }
+
+                setScale(value / 100)
+            }
+
+            addOnWheel(onscale, setTranslate)
+        }
+
+        this.ref.scale.onkeydown = (e) => {
+            if (e.key === "ArrowDown") {
+                this.ref.minus.onclick()
+            }
+            if (e.key === "ArrowUp") {
+                this.ref.plus.onclick()
+            }
+        }
+
+        this.ref.minus.onmousedown =
+            this.ref.plus.onmousedown = function (e) {
+                const interval = setInterval(() => {
+                    this.onclick()
+                }, 100)
+
+                this.onmouseup = () => clearInterval(interval)
+                return false
+            }
+
+        const addOnWheel = (onscale, setTranslate) => {
+            let onwheel
+
+            window.addEventListener('wheel', onwheel = (e) => {
+                e.stopPropagation()
+
+                if(e.ctrlKey){
+                    alert('Используй Shift')
+                    return
+                }
+                if (!e.shiftKey) {
+                    setTranslate(-e.deltaX / 10, -e.deltaY / 10)
+                    return false
+                }
+
+                const value = Number.parseInt(this.ref.scale.value)
+
+                if (e.deltaY > 0) {
+                    this.ref.scale.value = value + 5
+                    onscale()
+                    return false
+                }
+                this.ref.scale.value = value - 5
+                onscale()
+
+                return false
+            })
+
+            this.onUnmount = () => {
+                window.removeEventListener('wheel', onwheel)
+            }
+        }
+
+
+        this.ref.close.onclick = () => {
+            appContext.expandRoot?.destroy()
+            appContext.expandRoot = null
+            appContext.appRoot?.mount(appContext.target)
+        }
+
+    </script>
+</div>
+
+-экран для разворачивания svg
+<div as="svg-box" class="screen-box">
+    <screen-control ref="control"></screen-control>
+    <div ref="content" style="cursor: move;;"></div>
+    <script>
+
+        appContext.expandRoot = this
+
+        this.onSetData = (svg) => {
+            let width = svg.getAttribute('width')
+            let height = svg.getAttribute('height')
+
+            this.ref.content.appendChild(svg)
+            svg.setAttribute('viewBox', [0, 0, width, height].join(' '))
+            svg.setAttribute('height', '100vh')
+            svg.setAttribute('width', '100vw')
+
+            let scale = 1, tx = 0, ty = 0
+
+            this.ref.control.setData({ setScale, setTranslate, reset })
+
+            function setScale(newScale) {
+                const pscale = scale
+                scale = newScale
+                const tscale = scale / pscale
+                tx = tx * tscale, ty = ty * tscale
+                svg.setAttribute('transform', transformIt())
+                return scale
+            }
+
+            function setTranslate(x, y) {
+                tx += x, ty += y
+                svg.setAttribute('transform', transformIt())
+            }
+
+            function reset() {
+                scale = 1, tx = 0, ty = 0
+                svg.removeAttribute('transform')
+                return scale
+            }
+
+            this.ref.content.onmousedown = (event) => {
+                const dx = event.x, ptx = tx
+                const dy = event.y, pty = ty
+                let mousemove, mouseup
+
+                window.addEventListener('mousemove', mousemove = (event) => {
+
+                    event.preventDefault()
+                    event.stopPropagation()
+
+                    tx = event.x - dx + ptx
+                    ty = event.y - dy + pty
+
+                    svg.setAttribute('transform', transformIt())
+
+                })
+
+                window.addEventListener('mouseup', mouseup = () => {
+                    window.removeEventListener('mousemove', mousemove)
+                    window.removeEventListener('mouseup', mouseup)
+                })
+
+            }
+
+            function transformIt() {
+                return ['translate(', tx, ty, ')', 'scale(', scale, ')'].join(' ')
+            }
+
+        }
+    </script>
+</div>

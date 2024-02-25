@@ -56,6 +56,7 @@
 
     <state name="showReceiptAgain" title="stub step showReceipt" on-enter="receiptHandler#toNext">
         <state-transition name="to-next" to="showReceipt" />
+        <state-transition name="to-ext" to="showDefaultError" />
     </state>
 
     <state name="processStornoError" title="" on-enter="receiptHandler#processStornoError">

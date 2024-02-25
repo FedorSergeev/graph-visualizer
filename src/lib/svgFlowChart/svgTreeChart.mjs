@@ -106,7 +106,6 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
         !terminator &&
             (drawnShapes[stateName] = draw)
 
-        busyColumn[column] = [{ s: row, e: row }]
         rowIndex[row] = draw
         draw.column = column
         draw.row = row
@@ -247,14 +246,14 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
         let deep = (toState.column >= fromState.column ? toState.column + 1 : fromState.column) + 1
 
         // определить свободную от шейпов колонку
-        for (let i = toState.row + 1; i < fromState.row; i++) {
+        for (let i = toState.row; i < fromState.row; i++) {
             if (rowIndex[i].column >= deep) {
                 deep = rowIndex[i].column + 1
             }
         }
         // определить свободную от интервалов колонку
-        const s = toState.row + 1
-        const e = fromState.row - 1
+        const s = toState.row 
+        const e = fromState.row 
 
         while (true) {
             if (!busyColumn[deep]) {
@@ -263,11 +262,7 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
             }
             if (busyColumn[deep].every(
                 (interval) => (
-                    interval.e == e || (
-                        (interval.s < s || interval.s > e) &&
-                        (interval.e < s || interval.e > e) &&
-                        (s < interval.s || s > interval.e)
-                    )
+                    interval.e == e || s >= interval.e
                 )
             )) {
                 busyColumn[deep].push({ s, e })
