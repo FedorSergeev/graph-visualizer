@@ -53,7 +53,7 @@
 <button as="control-button">
     <script>
         const typeMap = {
-            canvas: 'img-container',
+            canvas: 'canvas-container',
             svg: 'svg-container'
         }
         const parser = new DOMParser()
@@ -102,13 +102,24 @@
 </button>
 
 - контейнер для canvas
-<div as="img-container" style="background-color: #FFFFFF;">
-    <!-- <container-control ref="controls"></container-control> -->
+<div as="canvas-container" style="background-color: #FFFFFF;">
+    <container-control ref="controls"></container-control>
     <script>
-        this.onSetData = (element) => {
-            element.style.width = '100%'
-            this.appendChild(element)
+
+        this.onSetData = (canvas) => {
+            canvas.style.width = '100%'
+            this.appendChild(canvas)
+
+            function download() {
+                const link = document.createElement("a");
+                link.href = canvas.toDataURL('image/png');
+                link.download = 'schema.png';
+                link.click();
+            }
+
+            this.ref.controls.setData(canvas, { download, container: 'expand-screen:img-box' })
         }
+
     </script>
 </div>
 
@@ -121,9 +132,10 @@
             let width = svg.getAttribute('width') * 1
             let height = svg.getAttribute('height') * 1
 
-            this.appendChild(svg)
+            const displaySvg = svg.cloneNode(true)
+            this.appendChild(displaySvg)
 
-            let scaleIt = () => scaleTo(svg, this, width, height)
+            let scaleIt = () => scaleTo(displaySvg, this, width, height)
 
             window.addEventListener('resize', scaleIt)
 
@@ -131,12 +143,20 @@
                 window.removeEventListener('resize', scaleIt)
             }
 
-            this.ref.controls.setData(svg.cloneNode(true), { container: 'expand-screen:svg-box' })
+            function download() {
+                const link = document.createElement("a");
+                link.href = toDataURL(svg);
+                link.download = 'schema.svg';
+                link.click();
+            }
 
-            scaleTo(svg, this, width, height)
+            this.ref.controls.setData(svg.cloneNode(true), { download, container: 'expand-screen:svg-box' })
+
+            scaleTo(displaySvg, this, width, height)
         }
 
-        const scaleTo = (svg, target, width, height) => {
+
+        function scaleTo(svg, target, width, height) {
 
             let scale = target.offsetWidth / width || 1
 
@@ -146,13 +166,19 @@
 
         }
 
+        function toDataURL(svg) {
+            const enc = new TextEncoder().encode(new XMLSerializer().serializeToString(svg))
+            const src = 'data:text/xml;base64,' + btoa(String.fromCodePoint(...enc))
+            return src
+        }
+
     </script>
 </div>
 
 - кнопки для контейнеров (canvas и svg)
 <div as="container-control" style="position: relative;">
     <div class="container-control-position">
-        <!-- <button ref="copy" class="container-control" title="копировать">=</button> -->
+        <button ref="download" class="container-control" title="скачать">v</button>
         <button ref="expand" class="container-control" title="развернуть">+</button>
     </div>
     <script>
@@ -161,10 +187,11 @@
             this.ref.expand.onclick = () => {
                 const screen = factory.create(options.container)
                 screen.mount(appContext.target)
-                screen.setData(element.cloneNode(true))
+                screen.setData(element)
                 appContext.appRoot.unmount()
             }
 
+            this.ref.download.onclick = options.download
 
         }
     </script>
@@ -211,7 +238,7 @@
                 this.removeChild(this.ref.box)
                 return
             }
-            if(!report) {
+            if (!report) {
                 return
             }
 
