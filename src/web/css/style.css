@@ -59,7 +59,11 @@ td.report {
 }
 
 .container-control {
+    display:inline-block;
+    text-decoration: none;
+    text-align: center;
     font-family: monospace;
+    font-weight: bold;
     font-size: 20px;
     height: 40px;
     width: 40px;
@@ -68,6 +72,8 @@ td.report {
     border-radius: 50%;
     border: 1px solid #999999;
     margin: 0 5px;
+    padding: 8px;
+    cursor: default;
 }
 
 .container-control:focus {

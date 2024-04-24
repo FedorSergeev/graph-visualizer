@@ -107,6 +107,8 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
             (drawnShapes[stateName] = draw)
 
         rowIndex[row] = draw
+        busyColumn[column] || (busyColumn[column] = [])
+
         draw.column = column
         draw.row = row
 
