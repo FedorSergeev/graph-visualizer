@@ -239,7 +239,7 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
                         stroke: conf.strokeColor
                     }
                 },
-                textBox(name, 1, tx + conf.gridSize, ty)
+                textBox(name, 1, tx + conf.gridSize, ty - conf.gridSize, 0)
             ]
         }
     }
@@ -276,7 +276,7 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
         return deep
     }
 
-    function textBox(text = '', width = 1, x = 0, y = 0) {
+    function textBox(text = '', width = 1, x = 0, y = 0, yShiftDirection = -1) {
         const words = text.split(/\s/)
         const lines = []
 
@@ -314,7 +314,7 @@ export default function SvgTreeChart(flowModel, document, config = defaultConfig
             tag: 'text',
             attributes: {
                 x: x,
-                y: y - conf.fontSize * lines.length,
+                y: y + yShiftDirection * conf.fontSize * lines.length,
                 'font-size': conf.fontSize,
                 'font-family': conf.fontFace
             },
