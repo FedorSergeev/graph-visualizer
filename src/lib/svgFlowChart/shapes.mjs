@@ -234,6 +234,47 @@ shape.enter = shape.end = (stateName, stateStructure, config = defaultConfig) =>
     }
 }
 
+shape.actor = (stateName, stateStructure, config = defaultConfig) => {
+    const width = config.shapeWidth 
+    const height = config.shapeHeight
+
+    return {
+        width: width ,
+        height: height,
+        tag: 'g',
+        attributes: {},
+        children: [
+            {
+                tag: 'circle',
+                attributes: {
+                    cx: width / 4,
+                    cy: height / 6,
+                    r: height / 6,
+                    fill: 'white',
+                    stroke: config.strokeColor
+                }
+            },
+            {
+                tag: 'path',
+                attributes: {
+                    d: [
+                        'M', 0, height / 2.5,
+                        'L', width /2 , height / 2.5,
+                        'M', width / 4, height / 3,
+                        'L', width / 4, height * 2 / 3,
+                        'M', width / 8, height,
+                        'L', width / 4, height * 2 / 3,
+                        'L', width * 3 / 8, height
+                    ].join(' '),
+                    fill: 'transparent',
+                    stroke: config.strokeColor
+                }
+
+            }
+        ]
+    }
+}
+
 /**
  * @class
  * shape structure generator class constructor
@@ -280,7 +321,7 @@ export default function StateShape(stateName, stateStructure, config = defaultCo
         if (!stateStructure) {
             return
         }
-        const struct = (shape[stateStructure.type])(stateName, stateStructure, conf)
+        const struct = (shape[stateStructure.type] || shape.process)(stateName, stateStructure, conf)
 
         struct.attributes.id = 'state-' + stateStructure.type + '/' + stateName
 
